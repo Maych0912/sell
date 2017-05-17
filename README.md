@@ -1,6 +1,6 @@
 # sell
 
-> maych
+Maych
 
 ## Build Setup
 
