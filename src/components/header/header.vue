@@ -100,13 +100,7 @@
 </script>
 
 <style lang='stylus' rel="stylesheet/stylus">
-  @import '../../common/stylus/mixin'
-  &.fade-enter-active, &.fade-leave-active {
-    transition: opacity .5s
-    }
-  &.fade-enter, &.fade-leave-active {
-    opacity: 0
-  }
+@import '../../common/stylus/mixin'
   .header
     overflow:hidden
     position:relative
@@ -219,12 +213,18 @@
       position: fixed
       top:0
       left:0
-      z-index: 100
+      z-index: 500
       width: 100%
       height: 100%
       overflow: auto
       background:rgba(7,17,27,0.8)
       backdrop-filter:blur(10px)
+      &.fade-enter-active, &.fade-leave-active {
+          transition: 0.5s
+      }
+      &.fade-enter, &.fade-leave-active {
+          opacity: 0
+      }
       .detail-wrapper
         width: 100%
         min-height: 100%

@@ -1,57 +1,62 @@
 <template>
-  <div class='shopcart'>
-    <div class="content" @click='toggleList'>
-      <div class="content-left">
-        <div class="logo-wrapper">
-          <div class="logo" :class="{'hightlight':totalCount>0}">
-            <i class='icon icon-shopping_cart' :class="{'hightlight':totalCount>0}"></i>
+  <div class='shop'>
+    <div class='shopcart'>
+      <div class="content" @click='toggleList'>
+        <div class="content-left">
+          <div class="logo-wrapper">
+            <div class="logo" :class="{'hightlight':totalCount>0}">
+              <i class='icon icon-shopping_cart' :class="{'hightlight':totalCount>0}"></i>
+            </div>
+            <div class="num" v-show='totalCount>0'>{{totalCount}}</div>
           </div>
-          <div class="num" v-show='totalCount>0'>{{totalCount}}</div>
+          <div class="price" :class="{'hightlight':totalPrice>0}">￥{{totalPrice}}</div>
+          <div class="desc">另需配送费￥{{deliveryPrice}}元</div>
         </div>
-        <div class="price" :class="{'hightlight':totalPrice>0}">￥{{totalPrice}}</div>
-        <div class="desc">另需配送费￥{{deliveryPrice}}元</div>
-      </div>
-      <div class="content-right">
-        <div class="pay" :class='payClass'>
-          {{payDesc}}
+        <div class="content-right" @click.stop.prevent='pay'>
+          <div class="pay" :class='payClass'>
+            {{payDesc}}
+          </div>
         </div>
       </div>
-    </div>
-    <div class="ball-container">
-      <transition v-for='ball in balls' name='drop' @before-enter="beforeEnter" @enter="enter" @after-enter="afterEnter" :key='ball.id'>
-        <div class='ball' v-show='ball.show'>
-        <div class="inner inner-hook"></div>
+      <div class="ball-container">
+        <transition v-for='ball in balls' name='drop' @before-enter="beforeEnter" @enter="enter" @after-enter="afterEnter" :key='ball.id'>
+          <div class='ball' v-show='ball.show'>
+          <div class="inner inner-hook"></div>
+          </div>
+        </transition>
+      </div>
+      <transition name='fold'>
+        <div class="shopcart-list" v-show='listShow'>
+          <div class="move">
+              <div class="listHeader">
+                <h1 class='title'>购物车</h1>
+                <div class='empty' @click='empty'>清空</div>
+              </div>
+              <div class="listContent" ref='listContent'>
+                <ul>
+                  <li class='food' v-for='food in selectFoods'>
+                    <span class='name'>{{food.name}}</span>
+                    <div class='price'>
+                      <span>￥{{food.price*food.count}}</span>
+                    </div>
+                    <div class='cartControl-wrapper'>
+                      <cartcontrol :food='food'></cartcontrol>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+          </div>
         </div>
       </transition>
     </div>
-    <transition name='fold'>
-      <div class="shopcart-list" v-show='listShow' >
-        <div class="move">
-            <div class="listHeader">
-              <h1 class='title'>购物车</h1>
-              <span class='empty'>清空</span>
-            </div>
-            <div class="listContent">
-            <ul>
-              <li class='food' v-for='food in selectFoods'>
-                <span class='name'>{{food.name}}</span>
-                <div class='price'>
-                  <span>￥{{food.price*food.count}}</span>
-                </div>
-                <div class='cartControl-wrapper'>
-                  <cartcontrol :food='food'></cartcontrol>
-                </div>
-              </li>
-            </ul>
-            </div>
-        </div>
-      </div>
+    <transition name='fadetra'>
+      <div class='list-mask' v-show='listShow' @click='listhidden'></div>
     </transition>
   </div>
 </template>
-
 <script type="text/ecmascript-6">
   import bus from 'components/public.js';
+  import BSscroll from 'better-scroll';
   import cartcontrol from 'components/cartcontrol/cartcontrol';
   export default {
     props: {
@@ -147,6 +152,18 @@
           return false;
         };
         let show = !this.fold;
+    // 购物车列表详情
+        if (show) {
+          this.$nextTick(() => {
+            if (!this.scroll) {
+              this.scroll = new BSscroll(this.$refs.listContent, {
+                click: true
+              });
+            } else {
+              this.scroll.refresh();
+            };
+          });
+        };
         return show;
       }
     },
@@ -207,6 +224,23 @@
           return;
         };
         this.fold = !this.fold;
+      },
+      listhidden () {
+        this.fold = true;
+      },
+    // 清空购物车
+      empty () {
+        this.selectFoods.forEach((food) => {
+          food.count = 0;
+        });
+      },
+    // 结算支付
+      pay () {
+        if (this.totalPrice < this.minPrice) {
+          return;
+        };
+        window.alert(`支付${this.totalPrice}元`);
+        this.fold = true;
       }
     },
     components: {
@@ -216,6 +250,7 @@
 </script>
 
 <style lang='stylus' type="stylesheet/stylus">
+  @import '../../common/stylus/mixin'
   .shopcart
     position: fixed
     left: 0
@@ -319,18 +354,73 @@
     .shopcart-list
       &.fold-enter-active, &.fold-leave-active
         transition:.5s
-      &.fold-enter, &.fold-leave-active
+      &.fold-enter, &.fold-leave-active 
        .move
           transform: translate3d(0,100%, 0)
       .move
+        transition: all 0.5s linear
+        transform: translate3d(0,-100%, 0)
         display:inline-block
         position: absolute
         top:0
         left:0
         z-index:-1
         width:100%
-        transition: all 0.5s linear
-        transform: translate3d(0,-100%, 0)
-      
+        .listContent
+          padding: 0 18px
+          max-height: 217px
+          background: #fff
+          overflow: hidden
+          .food
+            position: relative
+            padding: 12px 0
+            box-sizing: border-box
+            border-1px(rgba(7,17,27,0.1))
+            .name
+              line-height: 24px
+              font-size: 14px
+              color:rgb(7,17,27)
+            .price
+              position:absolute
+              right:90px
+              bottom:12px
+              line-height: 24px
+              font-size: 14px
+              color: rgb(240,20,20)
+              font-weight:700
+            .cartControl-wrapper
+              position: absolute
+              right:0
+              bottom:6px
+        .listHeader
+          height: 40px
+          line-height: 40px
+          padding: 0 18px
+          background:#f3f5f7
+          border-bottom: 1px solid rgba(7,17,27,0.1);
+          .title
+            float: left
+            font-size: 14px
+            color: rgb(7,17,27)
+          .empty
+            font-weight:700
+            float:right
+            font-size:14px
+            color:rgb(0,160,220)
+  .list-mask
+    position: fixed
+    top:0
+    left:0
+    width: 100%
+    height:100%
+    z-index: 40px
+    background: rgba(7,17,27,0.6)
+    backdrop-filter:blur(10px)
+    &.fadetra-enter-active, &.fadetra-leave-active {
+        transition: 0.5s
+      }
+    &.fadetra-enter, &.fadetra-leave-active {
+      opacity: 0
+    }
 
 </style>

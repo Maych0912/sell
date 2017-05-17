@@ -14,7 +14,7 @@
         <li v-for='item in goods' class='foos-list food-list-hook'>
           <h1 class='title'>{{item.name}}</h1>
           <ul>
-            <li v-for='food in item.foods' class='food-item border-1px'>
+            <li @click='selectedFood(food,$event)' v-for='food in item.foods' class='food-item border-1px'>
               <div class='iconn'>
                 <img :src="food.icon" width='57px' height='57px'>
               </div>
@@ -38,13 +38,16 @@
       </ul>
     </div>
     <shopcart ref:shopcart :select-foods='selectFoods' :deliveryPrice='seller.deliveryPrice' :minPrice='seller.minPrice'></shopcart>
+    <food :food='selectFood' ref='food'></food>
   </div>
+
 </template>
 
 <script type="text/ecmascript-6">
   import BSscroll from 'better-scroll';
   import shopcart from 'components/shopCart/shopcart';
   import cartcontrol from 'components/cartcontrol/cartcontrol';
+  import food from 'components/food/food';
   const ERR_OK = 0;
   export default {
   // 接收父组件传递的seller信息
@@ -57,7 +60,8 @@
       return {
         goods: [],
         listHeight: [],
-        scrollY: 0
+        scrollY: 0,
+        selectFood: {}
       };
     },
     computed: {
@@ -134,12 +138,20 @@
           height += item.clientHeight;
           this.listHeight.push(height);
         };
+      },
+      selectedFood (food, event) {
+        if (!event._constructed) {
+          return;
+        };
+        this.selectFood = food;
+        this.$refs.food.show();
       }
     },
     components: {
-    // 声明组件
+    // 注册组件
       shopcart,
-      cartcontrol
+      cartcontrol,
+      food
     }
   };
 </script>
